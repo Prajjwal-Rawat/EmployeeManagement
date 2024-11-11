@@ -9,6 +9,7 @@ const fileUpload = require("express-fileupload");
 const {connectCloudinary} = require("./config/Cloudinary");
 const {DbConnection} = require("./config/DbConnection");
 const routes = require("./Routes/Route");
+const cors = require("cors");
 
 app.use(cookieParser());
 app.use(express.json());
@@ -16,6 +17,10 @@ app.use(fileUpload({
     useTempFiles:true,
     tempFileDir:"/temp/"
 }));
+app.use(cors({
+    origin:"http://localhost:3000",
+    credentials:true
+}))
 app.use("/api/v1", routes);
 
 DbConnection();
