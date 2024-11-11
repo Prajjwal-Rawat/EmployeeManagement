@@ -22,7 +22,7 @@ exports.auth = async(req,res,next) => {
 
             console.log("Decoded payload -> ", decode);
 
-            res.user = decode;
+            req.user = decode;
 
         }catch(err){
             console.log("Token is not verified", err.message);
