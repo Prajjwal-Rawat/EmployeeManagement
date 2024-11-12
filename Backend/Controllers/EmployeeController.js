@@ -5,6 +5,9 @@ require("dotenv").config();
 
 
 
+function typeComparison(fileType, supportedType){
+    return supportedType.includes(fileType);
+ }
 
 exports.createEmployee = async (req, res) => {
     try {
@@ -37,6 +40,18 @@ exports.createEmployee = async (req, res) => {
                 {
                     success: false,
                     message: "This email is already present"
+                }
+            )
+        }
+
+        const supportedType = ["jpg", "png"];
+        const imageType = image.name.split(".").pop().toLowerCase();
+
+        if(!typeComparison(imageType, supportedType)){
+            return res.status(400).json(
+                {
+                    success:false,
+                    message:"This file Type is not supported only jpg and png are supported"
                 }
             )
         }

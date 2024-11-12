@@ -9,6 +9,7 @@ const Login = ({onLogin}) => {
     const navigate = useNavigate();
 
     const [formData, setFormData] = useState({userName: "", password: ""});
+    const [errMessage, setErrMessage] = useState("");
 
     function handleChange(event){
        const {name, value} = event.target;
@@ -28,23 +29,28 @@ const Login = ({onLogin}) => {
                 userName,
                 password
             });
-            console.log("login response ", response);
+            console.log("login response->", response);
+            onLogin(response.data?.data?.username);
+            navigate("/");
+            localStorage.setItem("token", response.data?.token);
             toast.success("Login Successfull");
+            
+            setFormData({ userName: "", password: "" });
+            setErrMessage("");
 
         }catch(err){
            console.log("Login Api error", err);
+           setErrMessage(err.response?.data?.message || "Login Failed");
            toast.error("Login Failed");
-        }finally{
 
-            toast.dismiss();
+        }finally{
+            toast.dismiss(toastId);
         }
     }
     
     function handleSubmit(event){
         event.preventDefault();
         AuthLogin(formData.userName, formData.password);
-        onLogin();
-        navigate("/");
     }
 
   return (
@@ -64,6 +70,9 @@ const Login = ({onLogin}) => {
             name='password'
             value={formData.password} />
         </label>
+        {
+            errMessage && (<p className='text-red-500 text-sm'>{errMessage}</p>)
+        }
 
         <button type="submit" className="w-full bg-yellow-50 rounded-[8px] text-black  py-2 mt-8 font-bold hover:bg-yellow-500 active:scale-100 transition-all duration-300 hover:scale-95">
             Login

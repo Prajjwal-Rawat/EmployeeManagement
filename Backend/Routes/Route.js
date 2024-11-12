@@ -9,7 +9,7 @@ const {auth, isAdmin} = require("../Middlewares/Auth");
 
 
 route.post("/login", Login);
-route.post("/createEmployee", auth, isAdmin, createEmployee);
+route.post("/createEmployee",  createEmployee);
 route.get("/getAllEmployees", getAllEmployees);
 route.get("/getEmployee/:id", getEmployee);
 route.put("/updateEmployee/:id", auth, isAdmin, updateEmployeeByID);
