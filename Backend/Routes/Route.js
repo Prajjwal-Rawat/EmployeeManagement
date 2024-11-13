@@ -12,7 +12,7 @@ route.post("/login", Login);
 route.post("/createEmployee",  createEmployee);
 route.get("/getAllEmployees", getAllEmployees);
 route.get("/getEmployee/:id", getEmployee);
-route.put("/updateEmployee/:id", auth, isAdmin, updateEmployeeByID);
-route.delete("/deleteEmployee/:id", auth, isAdmin, deleteEmployee);
+route.put("/updateEmployee/:id", updateEmployeeByID);
+route.delete("/deleteEmployee/:id", deleteEmployee);
 
 module.exports = route;

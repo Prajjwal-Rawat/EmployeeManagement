@@ -2,11 +2,29 @@ import React from 'react'
 import { Link } from 'react-router-dom';
 import { MdEdit } from "react-icons/md";
 import { MdDelete } from "react-icons/md";
+import toast from 'react-hot-toast';
+import { apiConnector } from '../../Services/ApiConnector';
+import { deleteEmployee } from '../../Services/Apis';
 
 const EmployeeTable = ({employeeData, pagination, fetchEmployees, updateEmployeeDetails}) => {
 
     const header = ["Unique Id", "Image", "Name", "Email", "Mobile No", "Designation", "Gender", "course", "Create Date", "Action"];
     const {currentPage, totalPages} = pagination;
+
+    const deleteEmployeeDetails = async(id) => {
+        const toastId = toast.loading("Loading...");
+        try{
+            const response = await apiConnector("DELETE", deleteEmployee + `${id}`);
+            console.log("removed employee response -> ", response);
+            fetchEmployees();
+            toast.success("Employee Removed Successfully");
+        }catch(err){
+            console.log("Error in deleting employee", err);
+            toast.error("Failed to Delete");
+        }finally{
+            toast.dismiss(toastId);
+        }
+    }
 
     const TableRow = ({employee}) => {
         return <tr>
@@ -23,17 +41,13 @@ const EmployeeTable = ({employeeData, pagination, fetchEmployees, updateEmployee
             <td className='px-4 py-2'>{employee.gender}</td>
             <td className='px-4 py-2'>{employee.course}</td>
             <td className='px-4 py-2'>{employee.createdAt}</td>
-            <td className='px-4 py-3  flex'>
-                <div className='flex gap-4'>
-
+            <td className='flex p-7 gap-1'>
                 {
                     <MdEdit onClick={() => updateEmployeeDetails(employee)} className=' cursor-pointer' />
                 }
                 {
-                    <MdDelete  className=' cursor-pointer'/>
+                    <MdDelete  className=' cursor-pointer' onClick={() => deleteEmployeeDetails(employee._id)}/>
                 }
-
-                </div>
             </td>
         </tr>
     }
@@ -72,9 +86,9 @@ const EmployeeTable = ({employeeData, pagination, fetchEmployees, updateEmployee
 
             <tbody>
                 {
-                    employeeData.map((emp) => {
-                       return <TableRow employee = {emp} key ={emp._id}/>
-                    })
+                    employeeData.map((emp) => (
+                        <TableRow key={emp._id} employee = {emp} />
+                    ))
                 }
             </tbody>
         </table>
@@ -90,9 +104,9 @@ const EmployeeTable = ({employeeData, pagination, fetchEmployees, updateEmployee
                 </button>
                  
                  {
-                   pageNumbers.map((page) => (
-                     <button onClick={() => handlePagination(page)}
-                     className={`border p-2 rounded-md bg-white text-black hover:bg-blue-700 ${currentPage === page ? "bg-blue-700": ""} transition-all duration-300`}>
+                   pageNumbers.map((page, index) => (
+                     <button key={index} onClick={() => handlePagination(page)}
+                     className={`border p-2 rounded-md text-black hover:bg-blue-700 transition-all duration-300 ${currentPage === page ? "text-white bg-blue-600" : "bg-white"}`}>
                         {page}
                      </button>
                    ))

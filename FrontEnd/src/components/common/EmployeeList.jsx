@@ -27,6 +27,12 @@ const EmployeeList = () => {
            toast.dismiss(toastId);
        }
     }
+
+
+    const handleSearch = (e) => {
+       const search = e.target.value;
+       fetchEmployees(search);
+    }
     
     useEffect(() => {
        fetchEmployees();
@@ -37,7 +43,6 @@ const EmployeeList = () => {
     }
 
     const updateEmployeeDetails = (empObj) => {
-      console.log("employee obj", empObj);
       setUpdateEmpObj(empObj);
       setShowModal(true);
     }
@@ -51,12 +56,22 @@ const EmployeeList = () => {
 
                 <input className='w-[300px] p-2 bg-slate-700 rounded-lg'
                     type="text"
+                    onChange={handleSearch}
                     placeholder='Search Employees' />
             </div>
 
-            <EmployeeTable employeeData = {employeeData} pagination={pagination} fetchEmployees = {fetchEmployees} updateEmployeeDetails = {updateEmployeeDetails}/>
+            {
+                employeeData && employeeData.length > 0 ? (
+                <EmployeeTable employeeData = {employeeData} pagination={pagination} fetchEmployees = {fetchEmployees} updateEmployeeDetails = {updateEmployeeDetails}/>
+                ): (<div className='flex justify-center text-2xl font-semibold'>No Employee Data Found !</div>)
+            }
 
-            <AddEmployee updateEmpObj = {updateEmpObj} showModal = {showModal} setShowModal = {setShowModal} fetchEmployees = {fetchEmployees}/>
+            <AddEmployee
+            updateEmpObj = {updateEmpObj} 
+            setUpdateEmpObj = {setUpdateEmpObj}
+            showModal = {showModal}
+            setShowModal = {setShowModal}
+            fetchEmployees = {fetchEmployees}/>
         </div>
     )
 }

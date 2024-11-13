@@ -2,10 +2,12 @@ import React, { useEffect, useState } from 'react'
 import toast from 'react-hot-toast';
 import { MdClose } from "react-icons/md";
 import { apiConnector } from '../../Services/ApiConnector';
-import { createEmployee } from '../../Services/Apis';
+import { createEmployee, updateEmployee } from '../../Services/Apis';
 
-const AddEmployee = ({ showModal, setShowModal, fetchEmployees, updateEmpObj }) => {
+const AddEmployee = ({ showModal, setShowModal, fetchEmployees, updateEmpObj, setUpdateEmpObj }) => {
 
+    const [errMesaage, setErrMessage] = useState("");
+    const [updateMode, setUpdateMode] = useState(false);
     const [formData, setFormData] = useState({
         name: "",
         email: "",
@@ -38,46 +40,55 @@ const AddEmployee = ({ showModal, setShowModal, fetchEmployees, updateEmpObj }) 
 
     const resetEmployeeStates = () => {
         setFormData({
-        name: "",
-        email: "",
-        mobile: "",
-        designation: "",
-        gender: "",
-        course: "",
-        image: null
-        })
+            name: "",
+            email: "",
+            mobile: "",
+            designation: "",
+            gender: "",
+            course: "",
+            image: null
+        });
+        setUpdateMode(false);
+        setUpdateEmpObj(null);
+        setErrMessage("");
+
+        const fileInput = document.querySelector("input[type='file']");
+        if(fileInput){
+            fileInput.value = "";
+        }
     }
 
 
-    const addEmployee = async() => {
+    const addEmployee = async () => {
         const toastId = toast.loading("Loading..");
-        try{
+        try {
             const formDataToSend = new FormData();
-            for(const[key, value] of Object.entries(formData)){
-                if(key === "image" && value){
+            for (const [key, value] of Object.entries(formData)) {
+                if (key === "image" && value) {
                     formDataToSend.append(key, value);
-                }else if(key !== "image"){
+                } else if (key !== "image") {
                     formDataToSend.append(key, value);
                 }
             }
 
 
-            const token = localStorage.getItem('token'); 
+            const token = localStorage.getItem('token');
 
             const headers = {
                 'Authorization': `Bearer ${token}`,
-                'Content-Type': 'multipart/form-data' 
+                'Content-Type': 'multipart/form-data'
             };
 
-            const response = await apiConnector("POST", createEmployee, formDataToSend, {headers});
-            toast.success("Employee Added");
+            const response = await apiConnector(updateMode ? "PUT" : "POST", updateMode ? updateEmployee + `${updateEmpObj._id}` : createEmployee, formDataToSend, { headers });
+            toast.success(updateMode ? "Employee Details Update Successfully" : "Employee Created Successfully");
             setShowModal(false);
             resetEmployeeStates();
             fetchEmployees();
-        }catch(err){
-            console.log("Error in creating Employee", err);
-            toast.error("Failed to Create Employee")
-        }finally{
+        } catch (err) {
+            console.log(updateMode ? "Error in updating Employee Details" : "Failed to Create Employee", err);
+            toast.error(updateMode ? "Failed to update Employee Details" : "Failed to Add Employee");
+            setErrMessage(err.response?.data?.message);
+        } finally {
             toast.dismiss(toastId);
         }
     }
@@ -87,19 +98,18 @@ const AddEmployee = ({ showModal, setShowModal, fetchEmployees, updateEmpObj }) 
         addEmployee();
     }
 
-    const [updateMode, setUpdateMode] = useState(false);
     useEffect(() => {
-        if(updateEmpObj){
+        if (updateEmpObj) {
             setUpdateMode(true);
             setFormData(updateEmpObj);
         }
     }, [updateEmpObj])
     return (
-        <div className={`${showModal ? "absolute" : "hidden"} transition-all duration-300 p-4 items-center w-[800px] bg-slate-500 top-2 right-[24%]`}>
+        <div className={`${showModal ? "absolute" : "hidden"} transition-all duration-300 p-4 items-center w-[800px] bg-slate-500 top-[-20px] right-[24%]`}>
             <div className='flex justify-between items-center'>
-                <h1 className='text-xl font-semibold' >{updateMode ? "Update Employee": "Add Employee"}</h1>
-                <MdClose onClick={() => setShowModal(false)}
-                className='font-bold text-xl cursor-pointer' />
+                <h1 className='text-xl font-semibold' >{updateMode ? "Update Employee" : "Add Employee"}</h1>
+                <MdClose onClick={() => { setShowModal(false), resetEmployeeStates() }}
+                    className='font-bold text-xl cursor-pointer border-[2px] border-black' />
             </div>
 
             <form onSubmit={handleSubmit} className='flex flex-col gap-3 mt-5 items-center'>
@@ -112,7 +122,7 @@ const AddEmployee = ({ showModal, setShowModal, fetchEmployees, updateEmpObj }) 
                         required />
                 </label>
 
-                <label htmlFor="email" className=' text-white w-full text-[0.875rem]'>Email
+                <label htmlFor="email" className=' text-white w-full text-[0.875rem]'>Email <sup className='text-pink-500'>*</sup>
                     <input className="bg-slate-950 rounded-[0.5rem] mt-1 text-slate-400 w-full p-[10px] border-b-2 border-richblack-100"
                         type="email"
                         onChange={handleChange}
@@ -120,8 +130,13 @@ const AddEmployee = ({ showModal, setShowModal, fetchEmployees, updateEmpObj }) 
                         name='email'
                         required />
                 </label>
+                {
+                    (errMesaage === "Please provide a valid email" || errMesaage === "This email is already present") && (
+                        <p className='text-red-500'>{errMesaage}</p>
+                    )
+                }
 
-                <label htmlFor="mobile" className=' text-white w-full text-[0.875rem]'>Mobile No
+                <label htmlFor="mobile" className=' text-white w-full text-[0.875rem]'>Mobile No <sup className='text-pink-500'>*</sup>
                     <input className="bg-slate-950 rounded-[0.5rem] mt-1 text-slate-400 w-full p-[10px] border-b-2 border-richblack-100"
                         type="number"
                         onChange={handleChange}
@@ -130,13 +145,14 @@ const AddEmployee = ({ showModal, setShowModal, fetchEmployees, updateEmpObj }) 
                         required />
                 </label>
 
-                <label htmlFor="designation" className=' text-white w-full text-[0.875rem]'>Designation
+                <label htmlFor="designation" className=' text-white w-full text-[0.875rem]'>Designation <sup className='text-pink-500'>*</sup>
 
                     <select className="bg-slate-950 rounded-[0.5rem] mt-1 text-slate-400 w-full p-[10px] border-b-2 border-richblack-100"
                         name="designation" id="designation"
                         onChange={handleChange}
                         value={formData.designation}
                         required>
+                        <option value="" disabled hidden>Select Designation</option>
                         <option value="HR">HR</option>
                         <option value="Manager">Manager</option>
                         <option value="Sales">Sales</option>
@@ -152,7 +168,8 @@ const AddEmployee = ({ showModal, setShowModal, fetchEmployees, updateEmpObj }) 
                             name='gender'
                             id='Male'
                             value="Male"
-                            onChange={handleChange} />
+                            onChange={handleChange}
+                            checked={formData.gender === "Male"} />
                         <label htmlFor="Male">Male</label>
                     </div>
 
@@ -162,19 +179,21 @@ const AddEmployee = ({ showModal, setShowModal, fetchEmployees, updateEmpObj }) 
                             name='gender'
                             id='Female'
                             value="Female"
-                            onChange={handleChange} />
+                            onChange={handleChange}
+                            checked={formData.gender === "Female"} />
                         <label htmlFor="Female">Female</label>
                     </div>
                 </div>
 
-                <div className='flex gap-3'>Course
+                <div className='flex gap-3'>Course:
                     <div>
                         <input
                             type="radio"
                             id='BCA'
                             name='course'
                             value="BCA"
-                            onChange={handleChange} />
+                            onChange={handleChange}
+                            checked={formData.course === "BCA"} />
                         <label htmlFor="BCA">BCA</label>
                     </div>
 
@@ -184,7 +203,8 @@ const AddEmployee = ({ showModal, setShowModal, fetchEmployees, updateEmpObj }) 
                             id='MCA'
                             name='course'
                             value="MCA"
-                            onChange={handleChange} />
+                            onChange={handleChange}
+                            checked={formData.course === "MCA"} />
                         <label htmlFor="MCA">MCA</label>
                     </div>
 
@@ -194,7 +214,8 @@ const AddEmployee = ({ showModal, setShowModal, fetchEmployees, updateEmpObj }) 
                             id='BSC'
                             name='course'
                             value="BSC"
-                            onChange={handleChange} />
+                            onChange={handleChange}
+                            checked={formData.course === "BSC"} />
                         <label htmlFor="BSC">BSC</label>
                     </div>
                 </div>
@@ -202,13 +223,18 @@ const AddEmployee = ({ showModal, setShowModal, fetchEmployees, updateEmpObj }) 
                 <label htmlFor="image">Image Upload
                     <input
                         type="file"
+                        required = {!updateMode}
                         onChange={handleFileChange}
-                        required
-                        name='image' />
+                        name='image'
+                        />
                 </label>
+                {
+                    errMesaage === "This file Type is not supported only jpg and png are supported" && (
+                        <p className='text-red-500'>{errMesaage}</p>
+                )}
 
                 <button type="submit" className='bg-yellow-400 px-8 py-2 font-semibold text-black'>
-                    {updateMode? "Update": "Create"}
+                    {updateMode ? "Update" : "Create"}
                 </button>
 
             </form>
